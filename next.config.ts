@@ -1,9 +1,10 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
-  turbopack: {
-    root: path.resolve(__dirname),
+  typescript: {
+    // Type checking already runs in CI via `tsc --noEmit`.
+    // Skip the redundant check during `next build` to speed up Vercel deploys.
+    ignoreBuildErrors: true,
   },
 };
 
