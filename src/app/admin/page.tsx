@@ -8,21 +8,27 @@ import Link from 'next/link'
 export const revalidate = 0
 
 export default async function AdminDashboard() {
-  const supabase = await createClient()
+  let malls: {id:string;name:string;city:string}[]|null = null
+  let activeSessions: Record<string,unknown>[]|null = null
+  let todaySessions: {id:string;status:string}[]|null = null
+  let todayPayments: {amount_myr:number;status:string}[]|null = null
+  let allSlots: {status:string}[]|null = null
 
-  const [
-    { data: malls },
-    { data: activeSessions },
-    { data: todaySessions },
-    { data: todayPayments },
-    { data: allSlots },
-  ] = await Promise.all([
-    supabase.from('malls').select('id, name, city'),
-    supabase.from('parking_sessions').select('*, parking_slots(slot_number, zones(name, level, malls(name)))').eq('status', 'active').order('entry_time', { ascending: false }),
-    supabase.from('parking_sessions').select('id, status').gte('created_at', new Date(new Date().setHours(0,0,0,0)).toISOString()),
-    supabase.from('payments').select('amount_myr, status').eq('status', 'paid').gte('paid_at', new Date(new Date().setHours(0,0,0,0)).toISOString()),
-    supabase.from('parking_slots').select('status'),
-  ])
+  try {
+    const supabase = await createClient()
+    const results = await Promise.all([
+      supabase.from('malls').select('id, name, city'),
+      supabase.from('parking_sessions').select('*, parking_slots(slot_number, zones(name, level, malls(name)))').eq('status', 'active').order('entry_time', { ascending: false }),
+      supabase.from('parking_sessions').select('id, status').gte('created_at', new Date(new Date().setHours(0,0,0,0)).toISOString()),
+      supabase.from('payments').select('amount_myr, status').eq('status', 'paid').gte('paid_at', new Date(new Date().setHours(0,0,0,0)).toISOString()),
+      supabase.from('parking_slots').select('status'),
+    ])
+    malls = results[0].data as typeof malls
+    activeSessions = results[1].data as typeof activeSessions
+    todaySessions = results[2].data as typeof todaySessions
+    todayPayments = results[3].data as typeof todayPayments
+    allSlots = results[4].data as typeof allSlots
+  } catch { /* Supabase not configured — show empty dashboard */ }
 
   const totalSlots = allSlots?.length ?? 0
   const occupiedSlots = allSlots?.filter((s) => s.status === 'occupied').length ?? 0

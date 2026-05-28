@@ -3,8 +3,7 @@
 import Link from 'next/link'
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import { ParkingCircle, LayoutDashboard, LogIn, LogOut, Settings, Car, LogOut as SignOut } from 'lucide-react'
+import { ParkingCircle, LayoutDashboard, LogIn, LogOut, Settings, Car } from 'lucide-react'
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -16,15 +15,21 @@ const NAV = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const supabase = createClient()
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) router.replace(`/login?next=${pathname}`)
+    // Lazy-import the Supabase client only on the browser to avoid
+    // SSR issues with placeholder env vars during static build
+    import('@/lib/supabase/client').then(({ createClient }) => {
+      const supabase = createClient()
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) router.replace(`/login?next=${encodeURIComponent(pathname)}`)
+      })
     })
-  }, [])
+  }, [pathname, router])
 
   async function handleSignOut() {
+    const { createClient } = await import('@/lib/supabase/client')
+    const supabase = createClient()
     await supabase.auth.signOut()
     router.replace('/login')
   }
@@ -64,7 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             onClick={handleSignOut}
             className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-400 hover:text-red-400 transition-colors"
           >
-            <SignOut className="h-4 w-4" /> Sign Out
+            <LogOut className="h-4 w-4" /> Sign Out
           </button>
         </div>
       </aside>
