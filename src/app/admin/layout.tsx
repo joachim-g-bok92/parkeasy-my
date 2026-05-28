@@ -1,5 +1,10 @@
+'use client'
+
 import Link from 'next/link'
-import { ParkingCircle, LayoutDashboard, LogIn, LogOut, Settings, Car } from 'lucide-react'
+import { useEffect } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { ParkingCircle, LayoutDashboard, LogIn, LogOut, Settings, Car, LogOut as SignOut } from 'lucide-react'
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -9,6 +14,21 @@ const NAV = [
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const supabase = createClient()
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) router.replace(`/login?next=${pathname}`)
+    })
+  }, [])
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    router.replace('/login')
+  }
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Sidebar */}
@@ -22,6 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <p className="text-xs text-slate-400">Admin Panel</p>
           </div>
         </div>
+
         <nav className="flex-1 p-3 space-y-1">
           {NAV.map((item) => (
             <Link
@@ -34,10 +55,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
           ))}
         </nav>
-        <div className="p-3 border-t border-slate-700">
+
+        <div className="p-3 border-t border-slate-700 space-y-1">
           <Link href="/" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-400 hover:text-white">
             <Car className="h-4 w-4" /> Public View
           </Link>
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-400 hover:text-red-400 transition-colors"
+          >
+            <SignOut className="h-4 w-4" /> Sign Out
+          </button>
         </div>
       </aside>
 
