@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 import { Badge } from '@/components/ui/badge'
 import type { ParkingSlot, Zone } from '@/types'
 import { Zap, Users, Accessibility, Car } from 'lucide-react'
@@ -30,9 +30,11 @@ const STATUS_STYLES: Record<string, string> = {
 export function ParkingGrid({ initialSlots, zones, mallId }: Props) {
   const [slots, setSlots] = useState<ParkingSlot[]>(initialSlots)
   const [activeZone, setActiveZone] = useState<string>(zones[0]?.id ?? '')
-  const supabase = createClient()
 
+  // Supabase Realtime — only initialise client-side to avoid WebSocket
+  // errors on the server (Node 20 has no native WS support).
   useEffect(() => {
+    const supabase = createClient()
     const channel = supabase
       .channel(`parking-slots-${mallId}`)
       .on(
