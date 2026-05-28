@@ -49,7 +49,7 @@ export function ParkingGrid({ initialSlots, zones, mallId }: Props) {
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [supabase, mallId])
+  }, [mallId])
 
   const zoneSlots = slots.filter((s) => s.zone_id === activeZone)
   const available = zoneSlots.filter((s) => s.status === 'available').length

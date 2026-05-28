@@ -21,7 +21,6 @@ export default function ExitPage() {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   async function search(e: React.FormEvent) {
     e.preventDefault()
@@ -30,6 +29,7 @@ export default function ExitPage() {
     setError('')
     setSession(null)
 
+    const supabase = createClient()
     const { data, error: dbErr } = await supabase
       .from('parking_sessions')
       .select(`

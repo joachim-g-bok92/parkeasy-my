@@ -22,9 +22,9 @@ export default function EntryPage() {
   const [result, setResult] = useState<{ sessionId: string; slotNumber: string } | null>(null)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
+    const supabase = createClient()
     supabase.from('malls').select('id, name').then(({ data }) => {
       if (data) { setMalls(data); setSelectedMall(data[0]?.id ?? '') }
     })
@@ -32,6 +32,7 @@ export default function EntryPage() {
 
   useEffect(() => {
     if (!selectedMall) return
+    const supabase = createClient()
     supabase.from('zones').select('*').eq('mall_id', selectedMall).then(({ data }) => {
       if (data) { setZones(data); setSelectedZoneId(data[0]?.id ?? '') }
     })
